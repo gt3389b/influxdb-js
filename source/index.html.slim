@@ -1,0 +1,44 @@
+---
+title: InfluxDB
+---
+
+div ng-app="adminApp" ng-controller="AdminIndexCtrl"
+  .row
+    .twelve.columns
+      .large-6.columns
+        h2 InfluxDB Administration
+      .large-6.columns style="margin-top:20px; text-align:right;"
+        button.small.button ng-show="authenticated" ng-click="authenticated=false" Disconnect
+
+  div ng-hide="authenticated"
+    form
+      fieldset
+        legend Authenticate
+        .large-3.columns
+          input type="text"placeholder="username" ng-model="username"
+        .large-3.columns
+          input type="password" placeholder="password" ng-model="password"
+        .large-6.columns
+          button.small.button ng-click="authenticate()" Connect
+
+  div ng-show="authenticated"
+    form
+      fieldset
+        legend Write Point
+        textarea
+        button.small.button ng-click="writeDataTest()" Connect
+
+    form
+      fieldset
+        legend Read Points
+        textarea
+        button.small.button ng-click="readDataTest()" Connect
+
+    table
+      thead
+        tr
+          th ng-repeat="column in columns" {{column}}
+      tbody
+        tr ng-repeat="point in points"
+          td ng-repeat="value in point" {{value}}
+
