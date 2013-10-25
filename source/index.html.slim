@@ -15,7 +15,7 @@ div ng-app="adminApp" ng-controller="AdminIndexCtrl"
       fieldset
         legend Authenticate
         .large-3.columns
-          input type="text"placeholder="username" ng-model="username"
+          input type="text" placeholder="username" ng-model="username"
         .large-3.columns
           input type="password" placeholder="password" ng-model="password"
         .large-6.columns
@@ -31,7 +31,8 @@ div ng-app="adminApp" ng-controller="AdminIndexCtrl"
     form
       fieldset
         legend Read Points
-        textarea
+        label Query
+        input type="text" ng-model="readQuery"
         button.small.button ng-click="readDataTest()" Connect
 
     table

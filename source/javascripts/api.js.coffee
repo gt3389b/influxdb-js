@@ -14,12 +14,16 @@ window.InfluxDB = class InfluxDB
     data = {name: databaseName}
     $.post url, JSON.stringify(data)
 
-  readPoint: (seriesName, callback) ->
+  readPoint: (seriesNames, fieldNames, callback) ->
     url = @url("db/foo/series")
-    query = "SELECT * FROM #{seriesName};"
+    query = "SELECT #{fieldNames} FROM #{seriesNames};"
     url += "&q=" + encodeURIComponent(query)
-    data = {name: name}
     $.get url, JSON.stringify(data), callback
+
+  _readPoint: (query, callback) ->
+    url = @seriesUrl("foo")
+    url += "&q=" + encodeURIComponent(query)
+    $.get url, {}, callback
 
   writePoint: (seriesName, values, options, callback) ->
     options ?= {}
