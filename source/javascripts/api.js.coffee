@@ -1,5 +1,5 @@
 window.InfluxDB = class InfluxDB
-  constructor: (@host, @port, @username, @password) ->
+  constructor: (@host, @port, @username, @password, @database) ->
 
   test: () ->
     return true
@@ -10,18 +10,21 @@ window.InfluxDB = class InfluxDB
     $.post url, JSON.stringify(data), callback
 
   deleteDatabase: (databaseName) ->
-    url = @url("db")
-    data = {name: databaseName}
-    $.post url, JSON.stringify(data)
+    url = @url("db/#{databaseName}")
+    $.delete url
+
+  getDatabaseNames: () ->
+    url = @url("dbs")
+    $.get url
 
   readPoint: (seriesNames, fieldNames, callback) ->
-    url = @url("db/foo/series")
+    url = @url("db/#{@database}/series")
     query = "SELECT #{fieldNames} FROM #{seriesNames};"
     url += "&q=" + encodeURIComponent(query)
-    $.get url, JSON.stringify(data), callback
+    $.get url, null, callback
 
   _readPoint: (query, callback) ->
-    url = @seriesUrl("foo")
+    url = @seriesUrl(@database)
     url += "&q=" + encodeURIComponent(query)
     $.get url, {}, callback
 
@@ -37,7 +40,7 @@ window.InfluxDB = class InfluxDB
     datum.points.push point
     data = [datum]
 
-    url = @seriesUrl("foo")
+    url = @seriesUrl(@database)
     $.post url, JSON.stringify(data), callback
 
   url: (action) ->

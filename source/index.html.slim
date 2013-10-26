@@ -4,22 +4,26 @@ title: InfluxDB
 
 div ng-app="adminApp" ng-controller="AdminIndexCtrl"
   .row
-    .twelve.columns
-      .large-6.columns
-        h2 InfluxDB Administration
-      .large-6.columns style="margin-top:20px; text-align:right;"
-        button.small.button ng-show="authenticated" ng-click="authenticated=false" Disconnect
+    .large-6.columns
+      h2 InfluxDB
+      h6.subheader ng-show="authenticated" style="margin-top: -20px;" Currently connected to {{database}} as {{username}}.
+    .large-6.columns style="margin-top:20px; text-align:right"
+      button.small.button ng-show="authenticated" ng-click="authenticated=false" Disconnect
 
   div ng-hide="authenticated"
     form
       fieldset
         legend Authenticate
-        .large-3.columns
-          input type="text" placeholder="username" ng-model="username"
-        .large-3.columns
-          input type="password" placeholder="password" ng-model="password"
-        .large-6.columns
-          button.small.button ng-click="authenticate()" Connect
+        .row
+          .large-3.columns
+            input type="text" placeholder="username" ng-model="username"
+          .large-3.columns
+            input type="password" placeholder="password" ng-model="password"
+          .large-3.columns
+            input type="text" placeholder="database" ng-model="database"
+          .large-3.columns
+            button.small.button ng-click="authenticate()" Connect
+        span.label.alert#authFailure style="display:none;" {{authMessage}}
 
   div ng-show="authenticated"
     form
