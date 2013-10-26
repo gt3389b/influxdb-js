@@ -25,15 +25,21 @@ div ng-app="adminApp" ng-controller="AdminIndexCtrl"
     form
       fieldset
         legend Write Point
-        textarea
-        button.small.button ng-click="writeDataTest()" Connect
+        label Time Series Name
+        input type="text" ng-model="writeSeriesName"
+        label Values
+        textarea placeholder="{ ... }" ng-model="writeValues"
+        button.small.button ng-click="writeData()" Connect
+        span.label.success#writeSuccess style="display:none; margin-left:40px;" {{successMessage}}
+        span.label.alert#writeFailure style="display:none; margin-left:40px;" {{alertMessage}}
+
 
     form
       fieldset
         legend Read Points
         label Query
-        input type="text" ng-model="readQuery"
-        button.small.button ng-click="readDataTest()" Connect
+        input type="text" placeholder="SELECT ..." ng-model="readQuery"
+        button.small.button ng-click="readData()" Execute Query
 
     table
       thead

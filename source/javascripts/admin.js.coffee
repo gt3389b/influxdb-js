@@ -10,6 +10,10 @@ adminApp.controller "AdminIndexCtrl", ["$scope", "$location", "$q", ($scope, $lo
   $scope.columns = []
   $scope.points = []
   $scope.readQuery = null
+  $scope.writeSeriesName = null
+  $scope.writeValues = null
+  $scope.successMessage = "OK"
+  $scope.alertMessage = "Error"
   influx = null
 
   console.log $scope.username
@@ -18,10 +22,25 @@ adminApp.controller "AdminIndexCtrl", ["$scope", "$location", "$q", ($scope, $lo
     influx = new InfluxDB($scope.host, $scope.port, $scope.username, $scope.password)
     $scope.authenticated = true
 
-  $scope.writeDataTest = () ->
-    $q.when(influx.writePoint("foo", {a:1, b:2})).then (response) ->
+  $scope.writeData = () ->
+    unless $scope.writeSeriesName
+      $scope.alertMessage = "Time Series Name is required."
+      $("span#writeFailure").show().delay(1500).fadeOut(500);
+      return
 
-  $scope.readDataTest = () ->
+
+    try
+      values = JSON.parse($scope.writeValues)
+    catch
+      $scope.alertMessage = "Unable to parse JSON."
+      $("span#writeFailure").show().delay(1500).fadeOut(500);
+      return
+
+    $q.when(influx.writePoint($scope.writeSeriesName, values)).then (response) ->
+      $scope.successMessage = "200 OK"
+      $("span#writeSuccess").show().delay(1500).fadeOut(500);
+
+  $scope.readData = () ->
     $q.when(influx._readPoint($scope.readQuery)).then (response) ->
       $scope.data = JSON.parse(response)
       console.log $scope.data
