@@ -41,7 +41,7 @@ window.InfluxDB = class InfluxDB
     $.post url, JSON.stringify(data), callback
 
   url: (action) ->
-    "http://#{@host}:#{@port}/#{action}?username=#{@username}&password=#{@password}"
+    "http://#{@host}:#{@port}/#{action}?u=#{@username}&p=#{@password}"
 
   seriesUrl: (databaseName, query) ->
     @url("db/#{databaseName}/series")
