@@ -29,7 +29,7 @@ div ng-app="adminApp" ng-controller="AdminIndexCtrl"
         input type="text" ng-model="writeSeriesName"
         label Values
         textarea placeholder="{ ... }" ng-model="writeValues"
-        button.small.button ng-click="writeData()" Connect
+        button.small.button ng-click="writeData()" Write Point
         span.label.success#writeSuccess style="display:none; margin-left:40px;" {{successMessage}}
         span.label.alert#writeFailure style="display:none; margin-left:40px;" {{alertMessage}}
 
@@ -41,11 +41,14 @@ div ng-app="adminApp" ng-controller="AdminIndexCtrl"
         input type="text" placeholder="SELECT ..." ng-model="readQuery"
         button.small.button ng-click="readData()" Execute Query
 
-    table
-      thead
-        tr
-          th ng-repeat="column in columns" {{column}}
-      tbody
-        tr ng-repeat="point in points"
-          td ng-repeat="value in point" {{value}}
+    div ng-repeat="datum in data"
+      h4
+        | {{datum.name}}
+      table.columns.twelve
+        thead
+          tr
+            th ng-repeat="column in datum.columns" {{column}}
+        tbody
+          tr ng-repeat="point in datum.points"
+            td ng-repeat="value in point track by $index" {{value}}
 
