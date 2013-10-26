@@ -17,6 +17,11 @@ window.InfluxDB = class InfluxDB
     url = @url("dbs")
     $.get url
 
+  createUser: (databaseName, username, password, callback) ->
+    url = @url("db/#{databaseName}/users")
+    data = {username: username, password: password}
+    $.post url, JSON.stringify(data), callback
+
   readPoint: (seriesNames, fieldNames, callback) ->
     url = @url("db/#{@database}/series")
     query = "SELECT #{fieldNames} FROM #{seriesNames};"
