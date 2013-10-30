@@ -1,12 +1,12 @@
 adminApp = angular.module "adminApp", []
 
 adminApp.controller "AdminIndexCtrl", ["$scope", "$location", "$q", ($scope, $location, $q) ->
-  $scope.host = "localhost"
-  $scope.port = 8086
-  $scope.database = "foo"
-  $scope.username = "user"
-  $scope.password = "pass"
-  $scope.authenticated = true
+  $scope.host = $location.search()["host"] || $location.host()
+  $scope.port = $location.search()["port"] || if $scope.host == "sandbox.influxdb.org" then 9061 else 8086
+  $scope.database = $location.search()["database"]
+  $scope.username = $location.search()["username"]
+  $scope.password = $location.search()["password"]
+  $scope.authenticated = false
   $scope.data = []
   $scope.readQuery = null
   $scope.writeSeriesName = null
@@ -24,6 +24,7 @@ adminApp.controller "AdminIndexCtrl", ["$scope", "$location", "$q", ($scope, $lo
     $q.when(influx._readPoint("SELECT * FROM _foobar.bazquux_;")).then (response) ->
       console.log response
       $scope.authenticated = true
+      $location.search({})
     , (response) ->
       $scope.authError(response.responseText)
 
@@ -69,5 +70,6 @@ adminApp.controller "AdminIndexCtrl", ["$scope", "$location", "$q", ($scope, $lo
     $scope.successMessage = msg
     $("span#writeSuccess").show().delay(1500).fadeOut(500);
 
-  $scope.authenticate()
+  if $scope.username && $scope.password && $scope.database
+    $scope.authenticate()
 ]

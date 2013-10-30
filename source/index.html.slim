@@ -1,12 +1,8 @@
----
-title: InfluxDB
----
-
 div ng-app="adminApp" ng-controller="AdminIndexCtrl"
   .row
     .large-6.columns
       h2 InfluxDB
-      h6.subheader ng-show="authenticated" style="margin-top: -20px;" Currently connected to {{database}} as {{username}}.
+      h6.subheader ng-show="authenticated" style="margin-top: -20px;" Currently connected to {{host}}:{{port}}/{{database}} as {{username}}.
     .large-6.columns style="margin-top:20px; text-align:right"
       button.small.button ng-show="authenticated" ng-click="authenticated=false" Disconnect
 
