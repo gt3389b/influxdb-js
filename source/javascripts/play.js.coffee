@@ -9,6 +9,8 @@ playApp = angular.module "playApp", []
 playApp.controller "PlayCtrl", ["$scope", "$location", "$q", ($scope, $location, $q) ->
   $scope.host = "ec2-23-20-52-199.compute-1.amazonaws.com"
   $scope.port = 9061
+  # $scope.host = "localhost"
+  # $scope.port = 8086
   $scope.username = null
   $scope.password = null
   $scope.databaseName = null
@@ -18,13 +20,11 @@ playApp.controller "PlayCtrl", ["$scope", "$location", "$q", ($scope, $location,
 
   $scope.createDatabase = () ->
     return unless $scope.databaseName
-    console.log "creating database: #{$scope.databaseName}"
     $q.when(influx.createDatabase($scope.databaseName)).then (response) ->
       $scope.username = $scope.generateCode(8)
       $scope.password = $scope.generateCode(12)
       $q.when(influx.createUser($scope.databaseName, $scope.username, $scope.password)).then (response) ->
         $scope.databaseCreated = true
-        console.log("database created")
 
   $scope.getDatabaseNames = () ->
     $q.when(master.getDatabaseNames()).then (response) ->
