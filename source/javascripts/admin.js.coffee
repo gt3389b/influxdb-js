@@ -22,7 +22,6 @@ adminApp.controller "AdminIndexCtrl", ["$scope", "$location", "$q", ($scope, $lo
   $scope.authenticate = () ->
     influx = new InfluxDB($scope.host, $scope.port, $scope.username, $scope.password, $scope.database)
     $q.when(influx._readPoint("SELECT * FROM _foobar.bazquux_;")).then (response) ->
-      console.log response
       $scope.authenticated = true
       $location.search({})
     , (response) ->
