@@ -1,9 +1,9 @@
 div ng-app="adminApp" ng-controller="AdminIndexCtrl"
   .row
-    .large-6.columns
+    .large-8.columns
       h2 InfluxDB
       h6.subheader ng-show="authenticated" style="margin-top: -20px;" Currently connected to {{host}}:{{port}}/{{database}} as {{username}}.
-    .large-6.columns style="margin-top:20px; text-align:right"
+    .large-4.columns style="margin-top:20px; text-align:right"
       button.small.button ng-show="authenticated" ng-click="authenticated=false" Disconnect
 
   div ng-hide="authenticated"
@@ -33,7 +33,6 @@ div ng-app="adminApp" ng-controller="AdminIndexCtrl"
         span.label.success#writeSuccess style="display:none; margin-left:40px;" {{successMessage}}
         span.label.alert#writeFailure style="display:none; margin-left:40px;" {{alertMessage}}
 
-
     form
       fieldset
         legend Read Points
@@ -51,4 +50,6 @@ div ng-app="adminApp" ng-controller="AdminIndexCtrl"
         tbody
           tr ng-repeat="point in datum.points"
             td ng-repeat="value in point track by $index" {{value}}
+
+      line-chart data="graph" ng-repeat="graph in datum.graphs"
 
