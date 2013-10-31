@@ -100,7 +100,7 @@ adminApp.directive "lineChart", [() ->
       console.log data
       return if (!data)
 
-      margin = {top: 20, right: 20, bottom: 30, left: 50}
+      margin = {top: 0, right: 0, bottom: 30, left: 50}
       width = 1086 - margin.left - margin.right
       height = 200 - margin.top - margin.bottom
 

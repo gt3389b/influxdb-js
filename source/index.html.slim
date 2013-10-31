@@ -43,6 +43,9 @@ div ng-app="adminApp" ng-controller="AdminIndexCtrl"
     div ng-repeat="datum in data"
       h4
         | {{datum.name}}
+
+      line-chart data="graph" ng-repeat="graph in datum.graphs"
+
       table.columns.twelve
         thead
           tr
@@ -50,6 +53,4 @@ div ng-app="adminApp" ng-controller="AdminIndexCtrl"
         tbody
           tr ng-repeat="point in datum.points"
             td ng-repeat="value in point track by $index" {{value}}
-
-      line-chart data="graph" ng-repeat="graph in datum.graphs"
 
