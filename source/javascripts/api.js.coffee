@@ -1,9 +1,6 @@
 window.InfluxDB = class InfluxDB
   constructor: (@host, @port, @username, @password, @database) ->
 
-  test: () ->
-    return true
-
   createDatabase: (databaseName, callback) ->
     url = @url("db")
     data = {name: databaseName}
@@ -11,11 +8,24 @@ window.InfluxDB = class InfluxDB
 
   deleteDatabase: (databaseName) ->
     url = @url("db/#{databaseName}")
-    $.delete url
+    $.ajax type: "DELETE", url: url
 
-  getDatabaseNames: () ->
+  getDatabases: () ->
     url = @url("dbs")
     $.get url
+
+  getClusterAdmins: () ->
+    url = @url("cluster_admins")
+    $.get url
+
+  authenticateClusterAdmin: (username, password, callback) ->
+    url = @url("cluster_admins/authenticate")
+    $.get url
+
+  createClusterAdmin: (username, password, callback) ->
+    data = {username: username, password: password}
+    url = @url("cluster_admins")
+    $.post url, JSON.stringify(data)
 
   createUser: (databaseName, username, password, callback) ->
     url = @url("db/#{databaseName}/users")

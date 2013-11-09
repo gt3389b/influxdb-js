@@ -7,6 +7,10 @@ adminApp.controller "AdminIndexCtrl", ["$scope", "$location", "$q", ($scope, $lo
   $scope.username = $location.search()["username"]
   $scope.password = $location.search()["password"]
   $scope.authenticated = false
+  $scope.isClusterAdmin = false
+  $scope.isDatabaseAdmin = false
+  $scope.databases = []
+  $scope.admins = []
   $scope.data = []
   $scope.readQuery = null
   $scope.writeSeriesName = null
@@ -14,12 +18,29 @@ adminApp.controller "AdminIndexCtrl", ["$scope", "$location", "$q", ($scope, $lo
   $scope.successMessage = "OK"
   $scope.alertMessage = "Error"
   $scope.authMessage = ""
+  $scope.selectedPane = "databases"
+
+  $scope.newAdminUsername = null
+  $scope.newAdminPassword = null
+
   influx = null
   master = null
 
   master = new InfluxDB($scope.host, $scope.port, "root", "root")
 
-  $scope.authenticate = () ->
+  $scope.authenticateAsClusterAdmin = () ->
+    influx = new InfluxDB($scope.host, $scope.port, $scope.username, $scope.password)
+    $q.when(influx.authenticateClusterAdmin()).then (response) ->
+      $scope.authenticated = true
+      $scope.isClusterAdmin = true
+      $scope.isDatabaseAdmin = false
+      $scope.getDatabases()
+      $scope.getClusterAdmins()
+      $location.search({})
+    , (response) ->
+      $scope.authError(response.responseText)
+
+  $scope.authenticateAsDatabaseAdmin = () ->
     influx = new InfluxDB($scope.host, $scope.port, $scope.username, $scope.password, $scope.database)
     $q.when(influx._readPoint("SELECT * FROM _foobar.bazquux_;")).then (response) ->
       $scope.authenticated = true
@@ -27,9 +48,28 @@ adminApp.controller "AdminIndexCtrl", ["$scope", "$location", "$q", ($scope, $lo
     , (response) ->
       $scope.authError(response.responseText)
 
-  $scope.getDatabaseNames = () ->
-    $q.when(master.getDatabaseNames()).then (response) ->
+  $scope.getDatabases = () ->
+    $q.when(influx.getDatabases()).then (response) ->
       $scope.databases = JSON.parse(response)
+
+  $scope.getClusterAdmins = () ->
+    $q.when(influx.getClusterAdmins()).then (response) ->
+      $scope.admins = JSON.parse(response)
+
+  $scope.createClusterAdmin = () ->
+    $q.when(influx.createClusterAdmin($scope.newAdminUsername, $scope.newAdminPassword)).then (response) ->
+      $scope.newAdminUsername = null
+      $scope.newAdminPassword = null
+      $scope.getClusterAdmins()
+
+  $scope.createDatabase = () ->
+    $q.when(influx.createDatabase($scope.newDatabaseName)).then (response) ->
+      $scope.newDatabaseName = null
+      $scope.getDatabases()
+
+  $scope.deleteDatabase = (name) ->
+    $q.when(influx.deleteDatabase(name)).then (response) ->
+      $scope.getDatabases()
 
   $scope.writeData = () ->
     unless $scope.writeSeriesName
