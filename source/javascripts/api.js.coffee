@@ -1,5 +1,11 @@
 window.InfluxDB = class InfluxDB
-  constructor: (@host, @port, @username, @password, @database) ->
+  constructor: (opts) ->
+    opts = {} unless opts
+    @host = opts.host || "localhost"
+    @port = opts.port || 8086
+    @username = opts.username || "root"
+    @password = opts.password || "root"
+    @database = opts.database
 
   createDatabase: (databaseName, callback) ->
     url = @url("db")

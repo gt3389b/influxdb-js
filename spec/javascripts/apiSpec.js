@@ -3,7 +3,7 @@ describe("InfluxDB", function() {
   var DATABASE = "influx.testdb";
 
   beforeEach(function() {
-    influxdb = new InfluxDB("localhost", 8086, "root", "root");
+    influxdb = new InfluxDB();
     influxdb.deleteDatabase(DATABASE)
     successCallback = jasmine.createSpy("success");
   })
