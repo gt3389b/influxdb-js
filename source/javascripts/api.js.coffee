@@ -52,6 +52,9 @@ window.InfluxDB = class InfluxDB
         point = {}
         data[0].columns.forEach (column, index) ->
           point[column] = p[index]
+        t = new Date(0)
+        t.setUTCSeconds Math.round(point.time/1000)
+        point.time = t
         point
       )
 
