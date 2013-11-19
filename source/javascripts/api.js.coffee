@@ -46,16 +46,18 @@ window.InfluxDB = class InfluxDB
   query: (query, callback) ->
     url = @seriesUrl(@database)
     url += "&q=" + encodeURIComponent(query)
-    $.getJSON url, (data) ->
-      callback(data[0].points.map (p) ->
-        point = {}
-        data[0].columns.forEach (column, index) ->
-          point[column] = p[index]
-        t = new Date(0)
-        t.setUTCSeconds Math.round(point.time/1000)
-        point.time = t
-        point
-      )
+    if callback
+      $.getJSON url, (data) ->
+        callback data[0].points.map (p) ->
+          point = {}
+          data[0].columns.forEach (column, index) ->
+            point[column] = p[index]
+          t = new Date(0)
+          t.setUTCSeconds Math.round(point.time/1000)
+          point.time = t
+          point
+    else
+      $.getJSON url
 
   writePoint: (seriesName, values, options, callback) ->
     options ?= {}
