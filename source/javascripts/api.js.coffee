@@ -47,7 +47,6 @@ window.InfluxDB = class InfluxDB
     url = @seriesUrl(@database)
     url += "&q=" + encodeURIComponent(query)
     $.getJSON url, (data) ->
-      console.log data
       callback(data[0].points.map (p) ->
         point = {}
         data[0].columns.forEach (column, index) ->
