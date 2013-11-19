@@ -1,42 +1,47 @@
 describe("InfluxDB", function() {
   var api;
+  var DATABASE = "influx.testdb";
 
   beforeEach(function() {
-    db = new InfluxDB("localhost", 8086, "root", "root");
+    influxdb = new InfluxDB("localhost", 8086, "root", "root");
+    influxdb.deleteDatabase(DATABASE)
     successCallback = jasmine.createSpy("success");
   })
 
   describe("#url", function() {
     it("should build a properly formatted url", function() {
-      var url = db.url("foo")
-      expect(url).toEqual("http://localhost:8086/foo?username=root&password=root")
+      var url = influxdb.url("foo")
+      expect(url).toEqual("http://localhost:8086/foo?u=root&p=root")
     })
   })
 
   describe("#createDatabase", function() {
     it("should create a new database", function () {
+      request = influxdb.createDatabase(DATABASE, successCallback)
 
-      request = db.createDatabase("test", successCallback)
       waitsFor(function() {
         return successCallback.callCount > 0;
       }, 100);
-      expect(successCallback).toHaveBeenCalled();
+
+      runs(function() {
+        expect(successCallback).toHaveBeenCalled();
+      })
     })
   })
 
   describe("#readPoint", function() {
     it("should read a point from the database", function () {
-      db.readPoint()
+      influxdb.readPoint()
     })
+  })
+
+  describe("#query", function() {
+
   })
 
   describe("#writePoint", function() {
     it("should write a point into the database", function () {
-      db.writePoint("foo", {a: 1, b: 2})
+      influxdb.writePoint("foo", {a: 1, b: 2})
     })
-  })
-
-  it("should be truthy", function() {
-    expect(db.test()).toEqual(true);
   })
 });
