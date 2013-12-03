@@ -20,8 +20,8 @@ window.InfluxDB = class InfluxDB
     url = @url("dbs")
     $.get url
 
-  getDatabaseUsers: () ->
-    url = @("db/#{@database}/users")
+  getDatabaseUsers: (databaseName) ->
+    url = @url("db/#{databaseName}/users")
     $.get url
 
   getInterfaces: () ->
