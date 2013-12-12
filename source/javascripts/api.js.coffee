@@ -17,7 +17,7 @@ window.InfluxDB = class InfluxDB
     $.ajax type: "DELETE", url: url
 
   getDatabases: () ->
-    url = @url("dbs")
+    url = @url("db")
     $.get url
 
   getDatabaseUsers: (databaseName) ->
@@ -37,13 +37,13 @@ window.InfluxDB = class InfluxDB
     $.get url
 
   createClusterAdmin: (username, password, callback) ->
-    data = {username: username, password: password}
+    data = {name: username, password: password}
     url = @url("cluster_admins")
     $.post url, JSON.stringify(data)
 
   createUser: (databaseName, username, password, callback) ->
     url = @url("db/#{databaseName}/users")
-    data = {username: username, password: password}
+    data = {name: username, password: password}
     $.post url, JSON.stringify(data), callback
 
   authenticateDatabaseUser: () ->
