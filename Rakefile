@@ -20,4 +20,5 @@ task :publish do
 
   puts "Uploading influxdb.js to S3 as influxdb-#{version}.js..."
   system "aws s3 cp build/javascripts/influxdb.js s3://get.influxdb.org/influxdb-#{version}.js"
+  system "aws s3 cp build/javascripts/influxdb.js s3://get.influxdb.org/influxdb-latest.js"
 end
