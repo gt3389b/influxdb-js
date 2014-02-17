@@ -7,6 +7,18 @@ window.InfluxDB = class InfluxDB
     @password = opts.password || "root"
     @database = opts.database
 
+  ###
+  # Databases
+  #
+  # GET    /db
+  # POST   /db
+  # DELETE /db/:db
+  ###
+
+  getDatabases: () ->
+    url = @url("db")
+    $.get url
+
   createDatabase: (databaseName, callback) ->
     url = @url("db")
     data = {name: databaseName}
@@ -16,21 +28,44 @@ window.InfluxDB = class InfluxDB
     url = @url("db/#{databaseName}")
     $.ajax type: "DELETE", url: url
 
-  getDatabases: () ->
-    url = @url("db")
-    $.get url
+  ###
+  # Database Users
+  #
+  # GET  /db/:db/users
+  # POST /db/:db/users
+  # GET  /db/:db/user/:name
+  # POST /db/:db/user/:name
+  # GET  /db/:db/authenticate
+  ###
 
   getDatabaseUsers: (databaseName) ->
     url = @url("db/#{databaseName}/users")
     $.get url
 
+  createUser: (databaseName, username, password, callback) ->
+    url = @url("db/#{databaseName}/users")
+    data = {name: username, password: password}
+    $.post url, JSON.stringify(data), callback
+
   getDatabaseUser: (databaseName, username) ->
     url = @url("db/#{databaseName}/users/#{username}")
     $.get url
 
-  getInterfaces: () ->
-    url = @url("interfaces")
+  updateDatabaseUser: (databaseName, username, params, callback) ->
+    url = @url("db/#{databaseName}/users/#{username}")
+    $.post url, JSON.stringify(params), callback
+
+  authenticateDatabaseUser: () ->
+    url = @url("db/#{@database}/authenticate")
     $.get url
+
+  ###
+  # Cluster Admins
+  #
+  # GET  /cluster_admins
+  # POST /cluster_admins
+  # GET  /cluster_admins/authenticate
+  ###
 
   getClusterAdmins: () ->
     url = @url("cluster_admins")
@@ -45,13 +80,14 @@ window.InfluxDB = class InfluxDB
     url = @url("cluster_admins")
     $.post url, JSON.stringify(data)
 
-  createUser: (databaseName, username, password, callback) ->
-    url = @url("db/#{databaseName}/users")
-    data = {name: username, password: password}
-    $.post url, JSON.stringify(data), callback
+  ###
+  # User Interfaces
+  #
+  # GET /interfaces
+  ###
 
-  authenticateDatabaseUser: () ->
-    url = @url("db/#{@database}/authenticate")
+  getInterfaces: () ->
+    url = @url("interfaces")
     $.get url
 
   readPoint: (fieldNames, seriesNames, callback) ->
