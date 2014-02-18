@@ -85,6 +85,22 @@ window.InfluxDB = class InfluxDB
     $.post url, JSON.stringify(data)
 
   ###
+  # Continuous Queries
+  #
+  # GET    /db/:db/continuous_queries
+  # POST   /db/:db/continuous_queries
+  # DELETE /db/:db/continuous_queries/:id
+  ###
+
+  getContinuousQueries: (databaseName) ->
+    url = @url("db/#{databaseName}/continuous_queries")
+    $.get url
+
+  deleteContinuousQuery: (databaseName, id) ->
+    url = @url("db/#{databaseName}/continuous_queries/#{id}")
+    $.ajax type: "DELETE", url: url
+
+  ###
   # User Interfaces
   #
   # GET /interfaces
