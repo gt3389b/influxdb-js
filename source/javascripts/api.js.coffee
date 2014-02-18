@@ -66,23 +66,28 @@ window.InfluxDB = class InfluxDB
   ###
   # Cluster Admins
   #
-  # GET  /cluster_admins
-  # POST /cluster_admins
-  # GET  /cluster_admins/authenticate
+  # GET    /cluster_admins
+  # POST   /cluster_admins
+  # DELETE /cluster_admins/:username
+  # GET    /cluster_admins/authenticate
   ###
 
   getClusterAdmins: () ->
     url = @url("cluster_admins")
     $.get url
 
-  authenticateClusterAdmin: (username, password, callback) ->
-    url = @url("cluster_admins/authenticate")
-    $.get url
+  deleteClusterAdmin: (username) ->
+    url = @url("cluster_admins/#{username}")
+    $.ajax type: "DELETE", url: url
 
   createClusterAdmin: (username, password, callback) ->
     data = {name: username, password: password}
     url = @url("cluster_admins")
     $.post url, JSON.stringify(data)
+
+  authenticateClusterAdmin: (username, password, callback) ->
+    url = @url("cluster_admins/authenticate")
+    $.get url
 
   ###
   # Continuous Queries
