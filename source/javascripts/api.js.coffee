@@ -47,6 +47,10 @@ window.InfluxDB = class InfluxDB
     data = {name: username, password: password}
     $.post url, JSON.stringify(data), callback
 
+  deleteDatabaseUser: (databaseName, username) ->
+    url = @url("db/#{databaseName}/users/#{username}")
+    $.ajax type: "DELETE", url: url
+
   getDatabaseUser: (databaseName, username) ->
     url = @url("db/#{databaseName}/users/#{username}")
     $.get url
