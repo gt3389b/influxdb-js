@@ -106,6 +106,35 @@ window.InfluxDB = class InfluxDB
     $.ajax type: "DELETE", url: url
 
   ###
+  # Cluster Shards
+  #
+  # GET    /cluster/shards
+  # POST   /cluster/shards
+  # DELETE /cluster/shards/:id
+  ###
+
+  getClusterShards: () ->
+    url = @url("cluster/shards")
+    $.get url
+
+  createClusterShard: (startTime, endTime, longTerm, serverIds, callback) ->
+    data =
+      startTime: startTime
+      endTime: endTime
+      longTerm: longTerm
+      shards: [{serverIds: serverIds}]
+
+    url = @url("cluster/shards")
+    $.post url, JSON.stringify(data), callback
+
+  deleteClusterShard: (id, serverIds) ->
+    data =
+      serverIds: serverIds
+
+    url = @url("cluster/shards")
+    $.ajax type: "DELETE", url: url, data: JSON.stringify(data)
+
+  ###
   # User Interfaces
   #
   # GET /interfaces
