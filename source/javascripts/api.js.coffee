@@ -113,6 +113,10 @@ window.InfluxDB = class InfluxDB
   # DELETE /cluster/shards/:id
   ###
 
+  getClusterServers: () ->
+    url = @url("cluster/servers")
+    $.get url
+
   getClusterShards: () ->
     url = @url("cluster/shards")
     $.get url
