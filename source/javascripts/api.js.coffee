@@ -106,8 +106,9 @@ window.InfluxDB = class InfluxDB
     $.ajax type: "DELETE", url: url
 
   ###
-  # Cluster Shards
+  # Cluster Servers & Shards
   #
+  # GET    /cluster/servers
   # GET    /cluster/shards
   # POST   /cluster/shards
   # DELETE /cluster/shards/:id
@@ -135,7 +136,7 @@ window.InfluxDB = class InfluxDB
     data =
       serverIds: serverIds
 
-    url = @url("cluster/shards")
+    url = @url("cluster/shards/#{id}")
     $.ajax type: "DELETE", url: url, data: JSON.stringify(data)
 
   ###
