@@ -69,6 +69,7 @@ window.InfluxDB = class InfluxDB
   # GET    /cluster_admins
   # POST   /cluster_admins
   # DELETE /cluster_admins/:username
+  # POST   /cluster_admins/:username
   # GET    /cluster_admins/authenticate
   ###
 
@@ -84,6 +85,10 @@ window.InfluxDB = class InfluxDB
     data = {name: username, password: password}
     url = @url("cluster_admins")
     $.post url, JSON.stringify(data)
+
+  updateClusterAdmin: (username, params, callback) ->
+    url = @url("cluster_admins/#{username}")
+    $.post url, JSON.stringify(params), callback
 
   authenticateClusterAdmin: (username, password, callback) ->
     url = @url("cluster_admins/authenticate")
