@@ -6,6 +6,7 @@ window.InfluxDB = class InfluxDB
     @username = opts.username || "root"
     @password = opts.password || "root"
     @database = opts.database
+    @ssl = opts.ssl || false
 
   ###
   # Databases
@@ -197,7 +198,7 @@ window.InfluxDB = class InfluxDB
     $.post url, JSON.stringify(data), callback
 
   url: (action) ->
-    "http://#{@host}:#{@port}/#{action}?u=#{@username}&p=#{@password}"
+    "#{if @ssl then "https" else "http"}://#{@host}:#{@port}/#{action}?u=#{@username}&p=#{@password}"
 
   seriesUrl: (databaseName, query) ->
     @url("db/#{databaseName}/series")
