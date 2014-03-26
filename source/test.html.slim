@@ -1,0 +1,55 @@
+doctype html
+
+html
+  head
+    = javascript_include_tag "analytics"
+
+    javascript:
+      $(document).ready(function() {
+        var parser = new UAParser();
+        var r = new Referer("http://google.com");
+
+        console.log(parser.getBrowser().name);
+        console.log(parser.getOS());
+
+        $("#user-agent .browser").html(JSON.stringify(parser.getBrowser()));
+        $("#user-agent .os").html(JSON.stringify(parser.getOS()));
+        $("#referer").html(JSON.stringify({referer: r.referer, medium: r.medium}));
+
+        getGeoByIP().then(function(location) {
+          console.log(location)
+          $("#geo").html(JSON.stringify(location));
+
+          var data = {
+            browserName: parser.getBrowser().name,
+            browserVersion: parser.getBrowser().version,
+            osName: parser.getOS().name,
+            osVersion: parser.getOS().version,
+            geoCountry: location.country,
+            referrerName: r.referer,
+            referrerMedium: r.medium
+          };
+
+          console.log(data)
+
+          influxdb.writePoints("pageViews", [data]);
+        });
+
+      })
+
+  body
+    h1 User Agent
+    #user-agent
+      h2 Browser
+      .browser
+
+      h2 OS
+      .os
+
+    h1 Referer
+    #referer
+
+    h1 IP Geolocation
+    #geo
+
+
