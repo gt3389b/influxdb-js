@@ -25,4 +25,8 @@ task :publish do
   puts "Uploading analytics.js to S3 as influxdb-#{version}.js..."
   system "aws s3 cp build/javascripts/analytics.js s3://get.influxdb.org/analytics-#{version}.js"
   system "aws s3 cp build/javascripts/analytics.js s3://get.influxdb.org/analytics-latest.js"
+
+  puts "Uploading analytics-core.js to S3 as influxdb-#{version}.js..."
+  system "aws s3 cp build/javascripts/analytics-core.js s3://get.influxdb.org/analytics-core-#{version}.js"
+  system "aws s3 cp build/javascripts/analytics-core.js s3://get.influxdb.org/analytics-core-latest.js"
 end
