@@ -2,11 +2,13 @@ window.InfluxDB = class InfluxDB
   constructor: (opts) ->
     opts = {} unless opts
     @host = opts.host || "localhost"
+    @hosts = opts.hosts || [opts.host] || ["localhost"]
     @port = opts.port || 8086
     @username = opts.username || "root"
     @password = opts.password || "root"
     @database = opts.database
     @ssl = opts.ssl || false
+    @max_retries = opts.max_retries || 20
 
   ###
   # Databases
@@ -17,17 +19,17 @@ window.InfluxDB = class InfluxDB
   ###
 
   getDatabases: () ->
-    url = @url("db")
-    $.get url
+    path = @path("db")
+    @get(path)
 
   createDatabase: (databaseName, callback) ->
-    url = @url("db")
+    path = @path("db")
     data = {name: databaseName}
-    $.post url, JSON.stringify(data), callback
+    @post path, JSON.stringify(data), callback
 
   deleteDatabase: (databaseName) ->
-    url = @url("db/#{databaseName}")
-    $.ajax type: "DELETE", url: url
+    path = @path("db/#{databaseName}")
+    @delete path
 
   ###
   # Database Users
@@ -40,29 +42,29 @@ window.InfluxDB = class InfluxDB
   ###
 
   getDatabaseUsers: (databaseName) ->
-    url = @url("db/#{databaseName}/users")
-    $.get url
+    path = @path("db/#{databaseName}/users")
+    @get(path)
 
   createUser: (databaseName, username, password, callback) ->
-    url = @url("db/#{databaseName}/users")
+    path = @path("db/#{databaseName}/users")
     data = {name: username, password: password}
-    $.post url, JSON.stringify(data), callback
+    @post path, JSON.stringify(data), callback
 
   deleteDatabaseUser: (databaseName, username) ->
-    url = @url("db/#{databaseName}/users/#{username}")
-    $.ajax type: "DELETE", url: url
+    path = @path("db/#{databaseName}/users/#{username}")
+    @delete(path)
 
   getDatabaseUser: (databaseName, username) ->
-    url = @url("db/#{databaseName}/users/#{username}")
-    $.get url
+    path = @path("db/#{databaseName}/users/#{username}")
+    @get(path)
 
   updateDatabaseUser: (databaseName, username, params, callback) ->
-    url = @url("db/#{databaseName}/users/#{username}")
-    $.post url, JSON.stringify(params), callback
+    path = @path("db/#{databaseName}/users/#{username}")
+    @post path, JSON.stringify(params), callback
 
   authenticateDatabaseUser: () ->
     url = @url("db/#{@database}/authenticate")
-    $.get url
+    $.get(url)
 
   ###
   # Cluster Admins
@@ -75,25 +77,25 @@ window.InfluxDB = class InfluxDB
   ###
 
   getClusterAdmins: () ->
-    url = @url("cluster_admins")
-    $.get url
+    path = @path("cluster_admins")
+    @get(path)
 
   deleteClusterAdmin: (username) ->
-    url = @url("cluster_admins/#{username}")
-    $.ajax type: "DELETE", url: url
+    path = @path("cluster_admins/#{username}")
+    @delete(path)
 
   createClusterAdmin: (username, password, callback) ->
+    path = @path("cluster_admins")
     data = {name: username, password: password}
-    url = @url("cluster_admins")
-    $.post url, JSON.stringify(data)
+    @post path, JSON.stringify(data)
 
   updateClusterAdmin: (username, params, callback) ->
-    url = @url("cluster_admins/#{username}")
-    $.post url, JSON.stringify(params), callback
+    path = @path("cluster_admins/#{username}")
+    @post path, JSON.stringify(params), callback
 
   authenticateClusterAdmin: (username, password, callback) ->
     url = @url("cluster_admins/authenticate")
-    $.get url
+    $.get(url)
 
   ###
   # Continuous Queries
@@ -104,12 +106,12 @@ window.InfluxDB = class InfluxDB
   ###
 
   getContinuousQueries: (databaseName) ->
-    url = @url("db/#{databaseName}/continuous_queries")
-    $.get url
+    path = @path("db/#{databaseName}/continuous_queries")
+    @get(path)
 
   deleteContinuousQuery: (databaseName, id) ->
-    url = @url("db/#{databaseName}/continuous_queries/#{id}")
-    $.ajax type: "DELETE", url: url
+    path = @path("db/#{databaseName}/continuous_queries/#{id}")
+    @delete(path)
 
   ###
   # Cluster Servers & Shards
@@ -121,12 +123,12 @@ window.InfluxDB = class InfluxDB
   ###
 
   getClusterServers: () ->
-    url = @url("cluster/servers")
-    $.get url
+    path = @path("cluster/servers")
+    @get(path)
 
   getClusterShards: () ->
-    url = @url("cluster/shards")
-    $.get url
+    path = @path("cluster/shards")
+    @get(path)
 
   createClusterShard: (startTime, endTime, longTerm, serverIds, callback) ->
     data =
@@ -135,15 +137,15 @@ window.InfluxDB = class InfluxDB
       longTerm: longTerm
       shards: [{serverIds: serverIds}]
 
-    url = @url("cluster/shards")
-    $.post url, JSON.stringify(data), callback
+    path = @path("cluster/shards")
+    @post path, JSON.stringify(data), callback
 
   deleteClusterShard: (id, serverIds) ->
+    path = @path("cluster/shards/#{id}")
     data =
       serverIds: serverIds
 
-    url = @url("cluster/shards/#{id}")
-    $.ajax type: "DELETE", url: url, data: JSON.stringify(data)
+    @delete path, JSON.stringify(data)
 
   ###
   # User Interfaces
@@ -152,35 +154,52 @@ window.InfluxDB = class InfluxDB
   ###
 
   getInterfaces: () ->
-    url = @url("interfaces")
-    $.get url
+    path = @path("interfaces")
+    @get(path)
 
   readPoint: (fieldNames, seriesNames, callback) ->
-    url = @url("db/#{@database}/series")
+    path = @path("db/#{@database}/series")
     query = "SELECT #{fieldNames} FROM #{seriesNames};"
     url += "&q=" + encodeURIComponent(query)
-    $.get url, null, callback
+    @get path, callback
 
   _readPoint: (query, callback) ->
-    url = @seriesUrl(@database)
-    url += "&q=" + encodeURIComponent(query)
-    $.get url, {}, callback
+    path = @path("db/#{@database}/series")
+    path += "&q=" + encodeURIComponent(query)
+    @get path, callback
 
   query: (query, callback) ->
-    url = @seriesUrl(@database)
-    url += "&q=" + encodeURIComponent(query)
-    if callback
-      $.getJSON url, (data) ->
-        callback data[0].points.map (p) ->
-          point = {}
-          data[0].columns.forEach (column, index) ->
-            point[column] = p[index]
-          t = new Date(0)
-          t.setUTCSeconds Math.round(point.time/1000)
-          point.time = t
-          point
-    else
-      $.getJSON url
+    path  = @path("db/#{@database}/series")
+    path += "&q=" + encodeURIComponent(query)
+    @get(path, callback)
+
+  get: (path, callback) ->
+    new Promise (resolve, reject) =>
+      @retry () =>
+        $.getJSON @urlFor(path), (data) ->
+          resolve(data)
+          if callback
+            callback formatPoints(data[0].points, data[0].columns)
+
+  post: (path, params, callback) ->
+    new Promise (resolve, reject) =>
+      @retry () =>
+        $.post @urlFor(path), params, (data) ->
+          resolve(data)
+
+  delete: (path, data) ->
+    @retry () =>
+      $.ajax type: "DELETE", url: @urlFor(path), data: data
+
+  formatPoints: (points, columns) ->
+    points.map (p) ->
+      point = {}
+      data[0].columns.forEach (column, index) ->
+        point[column] = p[index]
+      t = new Date(0)
+      t.setUTCSeconds Math.round(point.time/1000)
+      point.time = t
+      point
 
   writePoint: (seriesName, values, options, callback) ->
     options ?= {}
@@ -194,11 +213,29 @@ window.InfluxDB = class InfluxDB
     datum.points.push point
     data = [datum]
 
-    url = @seriesUrl(@database)
-    $.post url, JSON.stringify(data), callback
+    path  = @path("db/#{@database}/series")
+    @post path, JSON.stringify(data), callback
+
+  path: (action) ->
+    "#{action}?u=#{@username}&p=#{@password}"
 
   url: (action) ->
-    "#{if @ssl then "https" else "http"}://#{@host}:#{@port}/#{action}?u=#{@username}&p=#{@password}"
+    host = @hosts.shift();
+    @hosts.push(host);
+    "#{if @ssl then "https" else "http"}://#{host}:#{@port}/#{action}?u=#{@username}&p=#{@password}"
+
+  urlFor: (path) ->
+    host = @hosts.shift();
+    @hosts.push(host);
+    "#{if @ssl then "https" else "http"}://#{host}:#{@port}/#{path}"
 
   seriesUrl: (databaseName, query) ->
     @url("db/#{databaseName}/series")
+
+  retry: (callback, delay, retries) ->
+    delay ?= 10
+    retries ?= @max_retries
+    callback().then `undefined`, (reason) =>
+      setTimeout () =>
+        @retry callback, Math.min(delay * 2, 30000), retries-1
+      , delay
