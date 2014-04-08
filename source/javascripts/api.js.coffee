@@ -155,10 +155,10 @@ window.InfluxDB = class InfluxDB
         reqwest(
           method: 'get'
           url: @url(path)
-          success: (data) ->
+          success: (data) =>
             resolve(data)
             if callback
-              callback formatPoints(data[0].points, data[0].columns)
+              callback @formatPoints(data[0].points, data[0].columns)
         )
 
   post: (path, data, callback) ->
@@ -189,7 +189,7 @@ window.InfluxDB = class InfluxDB
   formatPoints: (points, columns) ->
     points.map (p) ->
       point = {}
-      data[0].columns.forEach (column, index) ->
+      columns.forEach (column, index) ->
         point[column] = p[index]
       t = new Date(0)
       t.setUTCSeconds Math.round(point.time/1000)
