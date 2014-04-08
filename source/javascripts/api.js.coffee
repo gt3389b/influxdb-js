@@ -19,17 +19,14 @@ window.InfluxDB = class InfluxDB
   ###
 
   getDatabases: () ->
-    path = @path("db")
-    @get(path)
+    @get @path("db")
 
   createDatabase: (databaseName, callback) ->
-    path = @path("db")
     data = {name: databaseName}
-    @post path, JSON.stringify(data), callback
+    @post @path("db"), data, callback
 
   deleteDatabase: (databaseName) ->
-    path = @path("db/#{databaseName}")
-    @delete path
+    @delete @path("db/#{databaseName}")
 
   ###
   # Database Users
@@ -42,29 +39,23 @@ window.InfluxDB = class InfluxDB
   ###
 
   getDatabaseUsers: (databaseName) ->
-    path = @path("db/#{databaseName}/users")
-    @get(path)
+    @get @path("db/#{databaseName}/users")
 
   createUser: (databaseName, username, password, callback) ->
-    path = @path("db/#{databaseName}/users")
     data = {name: username, password: password}
-    @post path, JSON.stringify(data), callback
+    @post @path("db/#{databaseName}/users"), data, callback
 
   deleteDatabaseUser: (databaseName, username) ->
-    path = @path("db/#{databaseName}/users/#{username}")
-    @delete(path)
+    @delete @path("db/#{databaseName}/users/#{username}")
 
   getDatabaseUser: (databaseName, username) ->
-    path = @path("db/#{databaseName}/users/#{username}")
-    @get(path)
+    @get @path("db/#{databaseName}/users/#{username}")
 
   updateDatabaseUser: (databaseName, username, params, callback) ->
-    path = @path("db/#{databaseName}/users/#{username}")
-    @post path, JSON.stringify(params), callback
+    @post @path("db/#{databaseName}/users/#{username}"), params, callback
 
   authenticateDatabaseUser: () ->
-    url = @url("db/#{@database}/authenticate")
-    $.get(url)
+    @get @path("db/#{@database}/authenticate")
 
   ###
   # Cluster Admins
@@ -77,25 +68,23 @@ window.InfluxDB = class InfluxDB
   ###
 
   getClusterAdmins: () ->
-    path = @path("cluster_admins")
-    @get(path)
+    @get @path("cluster_admins")
 
   deleteClusterAdmin: (username) ->
-    path = @path("cluster_admins/#{username}")
-    @delete(path)
+    @delete @path("cluster_admins/#{username}")
 
   createClusterAdmin: (username, password, callback) ->
-    path = @path("cluster_admins")
-    data = {name: username, password: password}
-    @post path, JSON.stringify(data)
+    data =
+      name: username
+      password: password
+
+    @post @path("cluster_admins"), data
 
   updateClusterAdmin: (username, params, callback) ->
-    path = @path("cluster_admins/#{username}")
-    @post path, JSON.stringify(params), callback
+    @post @path("cluster_admins/#{username}"), params, callback
 
   authenticateClusterAdmin: (username, password, callback) ->
-    url = @url("cluster_admins/authenticate")
-    $.get(url)
+    @get @path("cluster_admins/authenticate")
 
   ###
   # Continuous Queries
@@ -106,12 +95,10 @@ window.InfluxDB = class InfluxDB
   ###
 
   getContinuousQueries: (databaseName) ->
-    path = @path("db/#{databaseName}/continuous_queries")
-    @get(path)
+    @get @path("db/#{databaseName}/continuous_queries")
 
   deleteContinuousQuery: (databaseName, id) ->
-    path = @path("db/#{databaseName}/continuous_queries/#{id}")
-    @delete(path)
+    @delete @path("db/#{databaseName}/continuous_queries/#{id}")
 
   ###
   # Cluster Servers & Shards
@@ -123,12 +110,10 @@ window.InfluxDB = class InfluxDB
   ###
 
   getClusterServers: () ->
-    path = @path("cluster/servers")
-    @get(path)
+    @get @path("cluster/servers")
 
   getClusterShards: () ->
-    path = @path("cluster/shards")
-    @get(path)
+    @get @path("cluster/shards")
 
   createClusterShard: (startTime, endTime, longTerm, serverIds, callback) ->
     data =
@@ -137,15 +122,13 @@ window.InfluxDB = class InfluxDB
       longTerm: longTerm
       shards: [{serverIds: serverIds}]
 
-    path = @path("cluster/shards")
-    @post path, JSON.stringify(data), callback
+    @post @path("cluster/shards"), data, callback
 
   deleteClusterShard: (id, serverIds) ->
-    path = @path("cluster/shards/#{id}")
     data =
       serverIds: serverIds
 
-    @delete path, JSON.stringify(data)
+    @delete @path("cluster/shards/#{id}"), data
 
   ###
   # User Interfaces
@@ -154,42 +137,54 @@ window.InfluxDB = class InfluxDB
   ###
 
   getInterfaces: () ->
-    path = @path("interfaces")
-    @get(path)
+    @get @path("interfaces")
 
   readPoint: (fieldNames, seriesNames, callback) ->
-    path = @path("db/#{@database}/series")
     query = "SELECT #{fieldNames} FROM #{seriesNames};"
-    url += "&q=" + encodeURIComponent(query)
-    @get path, callback
+    @get @path("db/#{@database}/series", {q: query}), callback
 
   _readPoint: (query, callback) ->
-    path = @path("db/#{@database}/series")
-    path += "&q=" + encodeURIComponent(query)
-    @get path, callback
+    @get @path("db/#{@database}/series", {q: query}), callback
 
   query: (query, callback) ->
-    path  = @path("db/#{@database}/series")
-    path += "&q=" + encodeURIComponent(query)
-    @get(path, callback)
+    @get @path("db/#{@database}/series", {q: query}), callback
 
   get: (path, callback) ->
     new Promise (resolve, reject) =>
-      @retry () =>
-        $.getJSON @urlFor(path), (data) ->
-          resolve(data)
-          if callback
-            callback formatPoints(data[0].points, data[0].columns)
+      @retry resolve, reject, () =>
+        reqwest(
+          method: 'get'
+          url: @url(path)
+          success: (data) ->
+            resolve(data)
+            if callback
+              callback formatPoints(data[0].points, data[0].columns)
+        )
 
-  post: (path, params, callback) ->
+  post: (path, data, callback) ->
     new Promise (resolve, reject) =>
-      @retry () =>
-        $.post @urlFor(path), params, (data) ->
-          resolve(data)
+      @retry resolve, reject, () =>
+        reqwest(
+          method: 'post'
+          url: @url(path)
+          contentType: 'application/json'
+          data: JSON.stringify(data)
+          success: (data) ->
+            resolve(data)
+        )
+
 
   delete: (path, data) ->
-    @retry () =>
-      $.ajax type: "DELETE", url: @urlFor(path), data: data
+    new Promise (resolve, reject) =>
+      @retry resolve, reject, () =>
+        reqwest(
+          method: 'delete'
+          url: @url(path)
+          data: JSON.stringify(data)
+          success: (data) ->
+            resolve(data)
+            callback(data) if callback?
+        )
 
   formatPoints: (points, columns) ->
     points.map (p) ->
@@ -213,29 +208,25 @@ window.InfluxDB = class InfluxDB
     datum.points.push point
     data = [datum]
 
-    path  = @path("db/#{@database}/series")
-    @post path, JSON.stringify(data), callback
+    @post @path("db/#{@database}/series"), data, callback
 
-  path: (action) ->
-    "#{action}?u=#{@username}&p=#{@password}"
+  path: (action, opts) ->
+    path  = "#{action}?u=#{@username}&p=#{@password}"
+    path += "&q=" + encodeURIComponent(opts.q) if opts? and opts.q
+    path
 
-  url: (action) ->
-    host = @hosts.shift();
-    @hosts.push(host);
-    "#{if @ssl then "https" else "http"}://#{host}:#{@port}/#{action}?u=#{@username}&p=#{@password}"
-
-  urlFor: (path) ->
+  url: (path) ->
     host = @hosts.shift();
     @hosts.push(host);
     "#{if @ssl then "https" else "http"}://#{host}:#{@port}/#{path}"
 
-  seriesUrl: (databaseName, query) ->
-    @url("db/#{databaseName}/series")
-
-  retry: (callback, delay, retries) ->
+  retry: (resolve, reject, callback, delay, retries) ->
     delay ?= 10
     retries ?= @max_retries
     callback().then `undefined`, (reason) =>
-      setTimeout () =>
-        @retry callback, Math.min(delay * 2, 30000), retries-1
-      , delay
+      if reason.status == 0
+        setTimeout () =>
+          @retry resolve, reject, callback, Math.min(delay * 2, 30000), retries - 1
+        , delay
+      else
+        reject(reason)
