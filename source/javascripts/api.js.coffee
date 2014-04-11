@@ -157,7 +157,7 @@ window.InfluxDB = class InfluxDB
           url: @url(path)
           success: (data) =>
             resolve(data)
-            if callback
+            if callback && data[0]
               callback @formatPoints(data[0].points, data[0].columns)
         )
 
