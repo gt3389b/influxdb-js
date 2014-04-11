@@ -9,7 +9,7 @@ window.InfluxDB = class InfluxDB
     @database = opts.database
     @ssl = opts.ssl || false
     @max_retries = opts.max_retries || 20
-    @crossOrigin = (host for host in @hosts when host == window.location.host).length == 0
+    @isCrossOrigin = window.location.host not in @hosts
 
   ###
   # Databases
@@ -157,7 +157,7 @@ window.InfluxDB = class InfluxDB
           method: 'get'
           type: 'json'
           url: @url(path)
-          crossOrigin: @crossOrigin
+          crossOrigin: @isCrossOrigin
           success: (data) =>
             resolve(data)
             if callback
@@ -171,7 +171,7 @@ window.InfluxDB = class InfluxDB
           method: 'post'
           type: 'json'
           url: @url(path)
-          crossOrigin: @crossOrigin
+          crossOrigin: @isCrossOrigin
           contentType: 'application/json'
           data: JSON.stringify(data)
           success: (data) ->
@@ -186,7 +186,7 @@ window.InfluxDB = class InfluxDB
           method: 'delete'
           type: 'json'
           url: @url(path)
-          crossOrigin: @crossOrigin
+          crossOrigin: @isCrossOrigin
           data: JSON.stringify(data)
           success: (data) ->
             resolve(data)
