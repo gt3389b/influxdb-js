@@ -160,8 +160,11 @@ window.InfluxDB = class InfluxDB
           crossOrigin: @isCrossOrigin
           success: (data) =>
             resolve(data)
-            if callback && data[0]
-              callback @formatPoints(data[0].points, data[0].columns)
+            if callback
+              if data[0]
+                callback @formatPoints(data[0].points, data[0].columns)
+              else
+                callback []
         )
 
   post: (path, data, callback) ->
