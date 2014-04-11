@@ -9,7 +9,7 @@ window.InfluxDB = class InfluxDB
     @database = opts.database
     @ssl = opts.ssl || false
     @max_retries = opts.max_retries || 20
-    @crossOrigin = (host for host in hosts when host == window.location.host).length > 0
+    @crossOrigin = (host for host in @hosts when host == window.location.host).length > 0
 
   ###
   # Databases
