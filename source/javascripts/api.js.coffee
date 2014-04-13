@@ -160,11 +160,7 @@ window.InfluxDB = class InfluxDB
           crossOrigin: @isCrossOrigin
           success: (data) =>
             resolve(data)
-            if callback
-              if data[0]
-                callback @formatPoints(data[0].points, data[0].columns)
-              else
-                callback []
+            callback @formatPoints(data) if callback
         )
 
   post: (path, data, callback) ->
@@ -196,15 +192,18 @@ window.InfluxDB = class InfluxDB
             callback(data) if callback?
         )
 
-  formatPoints: (points, columns) ->
-    points.map (p) ->
-      point = {}
-      columns.forEach (column, index) ->
-        point[column] = p[index]
-      t = new Date(0)
-      t.setUTCSeconds Math.round(point.time/1000)
-      point.time = t
-      point
+  formatPoints: (data) ->
+    data.map (datum) ->
+      series =
+        name: datum.name
+        points: datum.points.map (p) ->
+          point = {}
+          datum.columns.forEach (column, index) ->
+            point[column] = p[index]
+          t = new Date(0)
+          t.setUTCSeconds Math.round(point.time/1000)
+          point.time = t
+          point
 
   writePoint: (seriesName, values, options, callback) ->
     options ?= {}
