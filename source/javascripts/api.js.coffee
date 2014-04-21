@@ -2,7 +2,7 @@ window.InfluxDB = class InfluxDB
   constructor: (opts) ->
     opts = {} unless opts
     @host = opts.host || "localhost"
-    @hosts = opts.hosts || [opts.host] || ["localhost"]
+    @hosts = opts.hosts || [@host]
     @port = opts.port || 8086
     @username = opts.username || "root"
     @password = opts.password || "root"
