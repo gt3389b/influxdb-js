@@ -220,7 +220,7 @@ window.InfluxDB = class InfluxDB
     @post @path("db/#{@database}/series"), data, callback
 
   writeSeries: (seriesData, callback) ->
-    @post @path("db/#{@database}/series"), data, callback
+    @post @path("db/#{@database}/series"), seriesData, callback
 
   path: (action, opts) ->
     path  = "#{action}?u=#{@username}&p=#{@password}"
