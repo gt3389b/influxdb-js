@@ -219,6 +219,9 @@ window.InfluxDB = class InfluxDB
 
     @post @path("db/#{@database}/series"), data, callback
 
+  writeSeries: (seriesData, callback) ->
+    @post @path("db/#{@database}/series"), data, callback
+
   path: (action, opts) ->
     path  = "#{action}?u=#{@username}&p=#{@password}"
     path += "&q=" + encodeURIComponent(opts.q) if opts? and opts.q
