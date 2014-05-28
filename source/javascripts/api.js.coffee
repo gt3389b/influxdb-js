@@ -10,6 +10,8 @@ window.InfluxDB = class InfluxDB
     @ssl = opts.ssl || false
     @max_retries = opts.max_retries || 20
     @isCrossOrigin = window.location.host not in @hosts
+    @username = encodeURIComponent(@username)
+    @password = encodeURIComponent(@password)
 
   ###
   # Databases
