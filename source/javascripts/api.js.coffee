@@ -115,11 +115,16 @@ window.InfluxDB = class InfluxDB
   getClusterServers: () ->
     @get @path("cluster/servers")
 
+  getClusterShardSpaces: () ->
+    @get @path("cluster/shard_spaces")
+
   getClusterShards: () ->
     @get @path("cluster/shards")
 
-  createClusterShard: (startTime, endTime, longTerm, serverIds, callback) ->
+  createClusterShard: (startTime, endTime, database, spaceName, serverIds, callback) ->
     data =
+      database: database
+      spaceName: spaceName
       startTime: startTime
       endTime: endTime
       longTerm: longTerm
