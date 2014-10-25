@@ -32,6 +32,15 @@ window.InfluxDB = class InfluxDB
     @delete @path("db/#{databaseName}")
 
   ###
+  # Database Configs
+  #
+  # POST   /cluster/database_configs/:db
+  ###
+
+  createDatabaseConfig: (databaseName, data, callback) ->
+    @post @path("cluster/database_configs/#{databaseName}"), data, callback
+
+  ###
   # Database Users
   #
   # GET  /db/:db/users
