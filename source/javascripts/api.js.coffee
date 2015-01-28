@@ -15,59 +15,29 @@ window.InfluxDB = class InfluxDB
 
   ###
   # Databases
-  #
-  # GET    /db
-  # POST   /db
-  # DELETE /db/:db
   ###
 
-  getDatabases: () ->
-    @get @path("db")
+  showDatabases: () ->
+    @query("SHOW DATABASES")
 
   createDatabase: (databaseName, callback) ->
-    data = {name: databaseName}
-    @post @path("db"), data, callback
+    @query("CREATE DATABASE #{databaseName}")
 
-  deleteDatabase: (databaseName) ->
-    @delete @path("db/#{databaseName}")
-
-  ###
-  # Cluster Configs
-  #
-  # GET /cluster/database_configs/:db
-  ###
-
-  getClusterConfiguration: () ->
-    @get @path("cluster/configuration")
-
-  ###
-  # Database Configs
-  #
-  # POST   /cluster/database_configs/:db
-  ###
-
-  createDatabaseConfig: (databaseName, data, callback) ->
-    @post @path("cluster/database_configs/#{databaseName}"), data, callback
+  dropDatabase: (databaseName) ->
+    @query("DROP DATABASE #{databaseName}")
 
   ###
   # Database Users
-  #
-  # GET  /db/:db/users
-  # POST /db/:db/users
-  # GET  /db/:db/user/:name
-  # POST /db/:db/user/:name
-  # GET  /db/:db/authenticate
   ###
 
-  getDatabaseUsers: (databaseName) ->
-    @get @path("db/#{databaseName}/users")
+  showUsers: () ->
+    @query("SHOW USERS")
 
   createUser: (databaseName, username, password, callback) ->
-    data = {name: username, password: password}
-    @post @path("db/#{databaseName}/users"), data, callback
+    @query("CREATE USER #{username} WITH PASSWORD '#{password}'")
 
-  deleteDatabaseUser: (databaseName, username) ->
-    @delete @path("db/#{databaseName}/users/#{username}")
+  dropUser: (databaseName, username) ->
+    @query("DROP USER #{username}")
 
   getDatabaseUser: (databaseName, username) ->
     @get @path("db/#{databaseName}/users/#{username}")
@@ -79,143 +49,45 @@ window.InfluxDB = class InfluxDB
     @get @path("db/#{@database}/authenticate")
 
   ###
-  # Cluster Admins
-  #
-  # GET    /cluster_admins
-  # POST   /cluster_admins
-  # DELETE /cluster_admins/:username
-  # POST   /cluster_admins/:username
-  # GET    /cluster_admins/authenticate
-  ###
-
-  getClusterAdmins: () ->
-    @get @path("cluster_admins")
-
-  deleteClusterAdmin: (username) ->
-    @delete @path("cluster_admins/#{username}")
-
-  createClusterAdmin: (username, password, callback) ->
-    data =
-      name: username
-      password: password
-
-    @post @path("cluster_admins"), data
-
-  updateClusterAdmin: (username, params, callback) ->
-    @post @path("cluster_admins/#{username}"), params, callback
-
-  authenticateClusterAdmin: (username, password, callback) ->
-    @get @path("cluster_admins/authenticate")
-
-  ###
   # Continuous Queries
-  #
-  # GET    /db/:db/continuous_queries
-  # POST   /db/:db/continuous_queries
-  # DELETE /db/:db/continuous_queries/:id
   ###
 
-  getContinuousQueries: (databaseName) ->
-    @get @path("db/#{databaseName}/continuous_queries")
+  showContinuousQueries: (databaseName) ->
+    @query("SHOW CONTINUOUS QUERIES")
 
   deleteContinuousQuery: (databaseName, id) ->
-    @delete @path("db/#{databaseName}/continuous_queries/#{id}")
-
-  ###
-  # Cluster Servers & Shards
-  #
-  # GET    /cluster/servers
-  # GET    /cluster/shards
-  # POST   /cluster/shards
-  # DELETE /cluster/shards/:id
-  ###
-
-  getClusterServers: () ->
-    @get @path("cluster/servers")
-
-  getClusterShardSpaces: () ->
-    @get @path("cluster/shard_spaces")
-
-  getClusterShards: () ->
-    @get @path("cluster/shards")
-
-  createClusterShard: (startTime, endTime, database, spaceName, serverIds, callback) ->
-    data =
-      database: database
-      spaceName: spaceName
-      startTime: startTime
-      endTime: endTime
-      longTerm: longTerm
-      shards: [{serverIds: serverIds}]
-
-    @post @path("cluster/shards"), data, callback
-
-  deleteClusterShard: (id, serverIds) ->
-    data =
-      serverIds: serverIds
-
-    @delete @path("cluster/shards/#{id}"), data
-
-  ###
-  # User Interfaces
-  #
-  # GET /interfaces
-  ###
-
-  getInterfaces: () ->
-    @get @path("interfaces")
-
-  readPoint: (fieldNames, seriesNames, callback) ->
-    query = "SELECT #{fieldNames} FROM #{seriesNames};"
-    @get @path("db/#{@database}/series", {q: query}), callback
-
-  _readPoint: (query, callback) ->
-    @get @path("db/#{@database}/series", {q: query}), callback
+    @query("DROP CONTINUOUS QUERY #{id}")
 
   query: (query, callback) ->
-    @get @path("db/#{@database}/series", {q: query}), callback
+    @get @path("query", {q: query}), callback
+
+  queryDatabase: (query, database, callback) ->
+    @get @path("query", {q: query, db: database}), callback
 
   get: (path, callback) ->
     new Promise (resolve, reject) =>
-      @retry resolve, reject, () =>
-        reqwest(
-          method: 'get'
-          type: 'json'
-          url: @url(path)
-          crossOrigin: @isCrossOrigin
-          success: (data) =>
-            resolve(data)
-            callback @formatPoints(data) if callback
-        )
+      reqwest(
+        method: 'get'
+        type: 'json'
+        url: @url(path)
+        crossOrigin: @isCrossOrigin
+        success: (data) =>
+          resolve(data)
+          callback @formatPoints(data) if callback
+      )
 
   post: (path, data, callback) ->
     new Promise (resolve, reject) =>
-      @retry resolve, reject, () =>
-        reqwest(
-          method: 'post'
-          type: 'json'
-          url: @url(path)
-          crossOrigin: @isCrossOrigin
-          contentType: 'application/json'
-          data: JSON.stringify(data)
-          success: (data) ->
-            resolve(data)
-        )
-
-
-  delete: (path, data) ->
-    new Promise (resolve, reject) =>
-      @retry resolve, reject, () =>
-        reqwest(
-          method: 'delete'
-          type: 'json'
-          url: @url(path)
-          crossOrigin: @isCrossOrigin
-          data: JSON.stringify(data)
-          success: (data) ->
-            resolve(data)
-            callback(data) if callback?
-        )
+      reqwest(
+        method: 'post'
+        type: 'json'
+        url: @url(path)
+        crossOrigin: @isCrossOrigin
+        contentType: 'application/json'
+        data: JSON.stringify(data)
+        success: (data) ->
+          resolve(data)
+      )
 
   formatPoints: (data) ->
     data.map (datum) ->
@@ -229,6 +101,23 @@ window.InfluxDB = class InfluxDB
           t.setUTCSeconds Math.round(point.time/1000)
           point.time = t
           point
+
+  read: (query) ->
+    @queryDatabase("SELECT * FROM cpu", "foo")
+
+  write: (seriesName, values, tags, callback) ->
+    tags ?= {}
+    datum = {points: [], name: seriesName, columns: []}
+    point = []
+
+    for k, v of values
+      point.push v
+      datum.columns.push k
+
+    datum.points.push point
+    data = [datum]
+
+    @post @path("db/#{@database}/series"), data, callback
 
   writePoint: (seriesName, values, options, callback) ->
     options ?= {}
@@ -250,6 +139,7 @@ window.InfluxDB = class InfluxDB
   path: (action, opts) ->
     path  = "#{action}?u=#{@username}&p=#{@password}"
     path += "&q=" + encodeURIComponent(opts.q) if opts? and opts.q
+    path += "&db=" + encodeURIComponent(opts.db) if opts? and opts.db
     path
 
   url: (path) ->
