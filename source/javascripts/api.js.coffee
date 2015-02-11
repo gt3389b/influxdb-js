@@ -8,7 +8,6 @@ window.InfluxDB = class InfluxDB
     @password = opts.password || "root"
     @database = opts.database
     @ssl = opts.ssl || false
-    @max_retries = opts.max_retries || 20
     @isCrossOrigin = window.location.host not in @hosts
     @username = encodeURIComponent(@username)
     @password = encodeURIComponent(@password)
@@ -39,14 +38,20 @@ window.InfluxDB = class InfluxDB
   dropUser: (databaseName, username) ->
     @query("DROP USER #{username}")
 
-  getDatabaseUser: (databaseName, username) ->
-    @get @path("db/#{databaseName}/users/#{username}")
+  ###
+  # Retention Policies
+  ###
 
-  updateDatabaseUser: (databaseName, username, params, callback) ->
-    @post @path("db/#{databaseName}/users/#{username}"), params, callback
+  showRetentionPolicies: (databaseName) ->
+    @queryDatabase("SHOW RETENTION POLICIES #{databaseName}")
 
-  authenticateDatabaseUser: () ->
-    @get @path("db/#{@database}/authenticate")
+  createRetentionPolicy: (databaseName, name, duration, replication, isDefault) ->
+    debugger
+    @query("CREATE RETENTION POLICY #{name} ON #{databaseName} DURATION #{duration} REPLICATION #{replication}#{if isDefault then " DEFAULT" else ""}")
+
+  deleteRetentionPolicy: (name) ->
+    @queryDatabase("DROP RETENTION POLICY #{name}")
+
 
   ###
   # Continuous Queries
@@ -58,11 +63,16 @@ window.InfluxDB = class InfluxDB
   deleteContinuousQuery: (databaseName, id) ->
     @query("DROP CONTINUOUS QUERY #{id}")
 
+
+  ###
+  # Queries
+  ###
+
   query: (query, callback) ->
     @get @path("query", {q: query}), callback
 
-  queryDatabase: (query, database, callback) ->
-    @get @path("query", {q: query, db: database}), callback
+  queryDatabase: (query, callback) ->
+    @get @path("query", {q: query, db: @database}), callback
 
   get: (path, callback) ->
     new Promise (resolve, reject) =>
@@ -74,6 +84,8 @@ window.InfluxDB = class InfluxDB
         success: (data) =>
           resolve(data)
           callback @formatPoints(data) if callback
+        error: (data) =>
+          reject(data)
       )
 
   post: (path, data, callback) ->
@@ -84,9 +96,11 @@ window.InfluxDB = class InfluxDB
         url: @url(path)
         crossOrigin: @isCrossOrigin
         contentType: 'application/json'
-        data: JSON.stringify(data)
-        success: (data) ->
+        data: if typeof data == "string" then data else JSON.stringify(data)
+        success: (data) =>
           resolve(data)
+        error: (data) =>
+          reject(data)
       )
 
   formatPoints: (data) ->
@@ -103,7 +117,7 @@ window.InfluxDB = class InfluxDB
           point
 
   read: (query) ->
-    @queryDatabase("SELECT * FROM cpu", "foo")
+    @queryDatabase("SELECT value FROM cpu", "foo")
 
   write: (seriesName, values, tags, callback) ->
     tags ?= {}
@@ -118,6 +132,9 @@ window.InfluxDB = class InfluxDB
     data = [datum]
 
     @post @path("db/#{@database}/series"), data, callback
+
+  writeJSON: (payload, callback) ->
+    @post @path("write", {db: @database}), payload, callback
 
   writePoint: (seriesName, values, options, callback) ->
     options ?= {}
@@ -147,13 +164,3 @@ window.InfluxDB = class InfluxDB
     @hosts.push(host);
     "#{if @ssl then "https" else "http"}://#{host}:#{@port}/#{path}"
 
-  retry: (resolve, reject, callback, delay, retries) ->
-    delay ?= 10
-    retries ?= @max_retries
-    callback().then `undefined`, (reason) =>
-      if reason.status == 0
-        setTimeout () =>
-          @retry resolve, reject, callback, Math.min(delay * 2, 30000), retries - 1
-        , delay
-      else
-        reject(reason)
