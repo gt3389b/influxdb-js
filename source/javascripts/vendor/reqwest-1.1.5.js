@@ -12,7 +12,9 @@
 
   var win = window
     , doc = document
-    , twoHundo = /^(20\d|1223)$/
+    , httpsRe = /^http/
+    , protocolRe = /(^\w+):\/\//
+    , twoHundo = /^(20\d|1223)$/ //http://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
     , byTag = 'getElementsByTagName'
     , readyState = 'readyState'
     , contentType = 'Content-Type'
@@ -67,14 +69,21 @@
         }
       }
 
+  function succeed(r) {
+    var protocol = protocolRe.exec(r.url);
+    protocol = (protocol && protocol[1]) || window.location.protocol;
+    return httpsRe.test(protocol) ? twoHundo.test(r.request.status) : !!r.request.response;
+  }
+
   function handleReadyState(r, success, error) {
     return function () {
       // use _aborted to mitigate against IE err c00c023f
       // (can't read props on aborted request objects)
       if (r._aborted) return error(r.request)
+      if (r._timedOut) return error(r.request, 'Request is aborted: timeout')
       if (r.request && r.request[readyState] == 4) {
         r.request.onreadystatechange = noop
-        if (twoHundo.test(r.request.status)) success(r.request)
+        if (succeed(r)) success(r.request)
         else
           error(r.request)
       }
@@ -89,9 +98,10 @@
       || defaultHeaders['accept'][o['type']]
       || defaultHeaders['accept']['*']
 
+    var isAFormData = typeof FormData === 'function' && (o['data'] instanceof FormData);
     // breaks cross-origin requests with legacy browsers
     if (!o['crossOrigin'] && !headers[requestedWith]) headers[requestedWith] = defaultHeaders['requestedWith']
-    if (!headers[contentType]) headers[contentType] = o['contentType'] || defaultHeaders['contentType']
+    if (!headers[contentType] && !isAFormData) headers[contentType] = o['contentType'] || defaultHeaders['contentType']
     for (h in headers)
       headers.hasOwnProperty(h) && 'setRequestHeader' in http && http.setRequestHeader(h, headers[h])
   }
@@ -257,7 +267,7 @@
 
     if (o['timeout']) {
       this.timeout = setTimeout(function () {
-        self.abort()
+        timedOut()
       }, o['timeout'])
     }
 
@@ -288,7 +298,7 @@
     }
 
     function success (resp) {
-      var type = o['type'] || setType(resp.getResponseHeader('Content-Type'))
+      var type = o['type'] || resp && setType(resp.getResponseHeader('Content-Type')) // resp can be undefined in IE
       resp = (type !== 'jsonp') ? self.request : resp
       // use global data filter on response text
       var filteredResponse = globalSetupOptions.dataFilter(resp.responseText, type)
@@ -333,6 +343,11 @@
       }
 
       complete(resp)
+    }
+
+    function timedOut() {
+      self._timedOut = true
+      self.request.abort()      
     }
 
     function error(resp, msg, t) {
@@ -404,6 +419,9 @@
         this._errorHandlers.push(fn)
       }
       return this
+    }
+  , 'catch': function (fn) {
+      return this.fail(fn)
     }
   }
 
